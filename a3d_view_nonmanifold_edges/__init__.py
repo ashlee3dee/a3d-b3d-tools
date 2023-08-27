@@ -16,7 +16,7 @@ bl_info = {
     "author": "Ashlee3Dee",
     "description": "Adds Viewport Overlay for Non-Manifold Edges",
     "blender": (3, 6, 1),
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "location": "3D View > Header > Overlays > Non-Manifold Edges",
     "warning": "",
     "doc_url": "",
