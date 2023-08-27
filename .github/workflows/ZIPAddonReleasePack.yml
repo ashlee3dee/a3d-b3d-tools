@@ -1,0 +1,42 @@
+# This action creates a new GitHub release using the tag name.
+# Tag name structure: {folder_name}_v{version(digits.digits.digits)}_stable
+name: ZIP Addon Release
+
+on:
+  push:
+    tags:
+      - '*_stable'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Set branch to main.
+      - uses: actions/checkout@v3
+        with:
+          ref: "main"
+          path: ${{ github.event.repository.name }}/
+
+      # Extract folder name from the tag name.
+      - name: Extract Folder Name
+        id: extract_folder_name
+        run: |
+          tag_name=${{ github.ref_name }}
+          folder_name=$(echo "$tag_name" | sed -E 's/_v[0-9]+\.[0-9]+\.[0-9]+.*//')
+          echo "folder_name=${folder_name}" >> $GITHUB_OUTPUT
+          
+      # Create a zip of the folder.
+      - name: Zip Folder
+        run: |
+          cd ${{ github.event.repository.name }}
+          folder_name=${{ steps.extract_folder_name.outputs.folder_name }}
+          zip -r ../${{github.ref_name}}.zip $folder_name/
+
+      # Create a new GitHub release using the tag name or commit id.
+      - name: Create versioned build with filtered zip file.
+        run: |
+          cd ${{ github.event.repository.name }}
+          gh release create ${{ github.ref_name }} --generate-notes \
+            ../${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
