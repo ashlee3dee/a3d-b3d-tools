@@ -53,7 +53,7 @@ class SNA_OT_Toggledraw_A5Ef8(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if bpy.app.version >= (3, 0, 0) and True:
+        if bpy.app.version >= (3, 0, 0):
             cls.poll_message_set('')
         return not False
 
@@ -63,12 +63,11 @@ class SNA_OT_Toggledraw_A5Ef8(bpy.types.Operator):
                 sna_drawnonmanifoldedges_534D5, (), 'WINDOW', 'POST_VIEW'))
             for a in bpy.context.screen.areas:
                 a.tag_redraw()
-        else:
-            if handler_7268F:
-                bpy.types.SpaceView3D.draw_handler_remove(handler_7268F[0], 'WINDOW')
-                handler_7268F.pop(0)
-                for a in bpy.context.screen.areas:
-                    a.tag_redraw()
+        elif handler_7268F:
+            bpy.types.SpaceView3D.draw_handler_remove(handler_7268F[0], 'WINDOW')
+            handler_7268F.pop(0)
+            for a in bpy.context.screen.areas:
+                a.tag_redraw()
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -76,50 +75,43 @@ class SNA_OT_Toggledraw_A5Ef8(bpy.types.Operator):
 
 
 def sna_add_to_view3d_pt_overlay_geometry_E729E(self, context):
-    if not (False):
-        layout = self.layout
-        layout.label(text='Non-Manifold Edges', icon_value=0)
-        layout.prop(bpy.context.scene, 'sna_show', text='Show', icon_value=0, emboss=True)
-        layout.prop(bpy.context.scene, 'sna_viewwidth', text='Width', icon_value=0, emboss=True)
-        layout.prop(bpy.context.scene, 'sna_viewcolor', text='Color', icon_value=0, emboss=True)
+    layout = self.layout
+    layout.label(text='Non-Manifold Edges', icon_value=0)
+    layout.prop(bpy.context.scene, 'sna_show', text='Show', icon_value=0, emboss=True)
+    layout.prop(bpy.context.scene, 'sna_viewwidth', text='Width', icon_value=0, emboss=True)
+    layout.prop(bpy.context.scene, 'sna_viewcolor', text='Color', icon_value=0, emboss=True)
 
 
 def sna_drawnonmanifoldedges_534D5():
-    if bpy.context.area.spaces[0].overlay.show_overlays:
-        bm_68E55 = bmesh.new()
-        if bpy.context.view_layer.objects.active:
-            if bpy.context.view_layer.objects.active.mode == 'EDIT' and True:
-                bm_68E55 = bmesh.from_edit_mesh(bpy.context.view_layer.objects.active.data)
-            else:
-                if False:
-                    dg = bpy.context.evaluated_depsgraph_get()
-                    bm_68E55.from_mesh(bpy.context.view_layer.objects.active.evaluated_get(dg).to_mesh())
-                else:
-                    bm_68E55.from_mesh(bpy.context.view_layer.objects.active.data)
-        if True:
-            bm_68E55.transform(bpy.context.view_layer.objects.active.matrix_world)
-        bm_68E55.verts.ensure_lookup_table()
-        bm_68E55.faces.ensure_lookup_table()
-        bm_68E55.edges.ensure_lookup_table()
-        for i_89534 in range(len(bm_68E55.edges)):
-            if bm_68E55.edges[i_89534].is_manifold:
-                pass
-            else:
-                lines = [(bm_68E55.edges[i_89534].verts[0].co, bm_68E55.edges[i_89534].verts[1].co)]
-                coords = []
-                indices = []
-                for i, line in enumerate(lines):
-                    coords.extend(line)
-                    indices.append((i * 2, i * 2 + 1))
-                shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
-                batch = batch_for_shader(shader, 'LINES', {"pos": coords}, indices=tuple(indices))
-                shader.bind()
-                shader.uniform_float("color", bpy.context.scene.sna_viewcolor)
-                gpu.state.line_width_set(bpy.context.scene.sna_viewwidth)
-                gpu.state.depth_test_set('LESS_EQUAL')
-                gpu.state.depth_mask_set(True)
-                gpu.state.blend_set('ALPHA')
-                batch.draw(shader)
+    if not bpy.context.area.spaces[0].overlay.show_overlays:
+        return
+    bm_68E55 = bmesh.new()
+    if bpy.context.view_layer.objects.active:
+        if bpy.context.view_layer.objects.active.mode == 'EDIT':
+            bm_68E55 = bmesh.from_edit_mesh(bpy.context.view_layer.objects.active.data)
+        else:
+            bm_68E55.from_mesh(bpy.context.view_layer.objects.active.data)
+    bm_68E55.transform(bpy.context.view_layer.objects.active.matrix_world)
+    bm_68E55.verts.ensure_lookup_table()
+    bm_68E55.faces.ensure_lookup_table()
+    bm_68E55.edges.ensure_lookup_table()
+    for i_89534 in range(len(bm_68E55.edges)):
+        if not bm_68E55.edges[i_89534].is_manifold:
+            lines = [(bm_68E55.edges[i_89534].verts[0].co, bm_68E55.edges[i_89534].verts[1].co)]
+            coords = []
+            indices = []
+            for i, line in enumerate(lines):
+                coords.extend(line)
+                indices.append((i * 2, i * 2 + 1))
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+            batch = batch_for_shader(shader, 'LINES', {"pos": coords}, indices=tuple(indices))
+            shader.bind()
+            shader.uniform_float("color", bpy.context.scene.sna_viewcolor)
+            gpu.state.line_width_set(bpy.context.scene.sna_viewwidth)
+            gpu.state.depth_test_set('LESS_EQUAL')
+            gpu.state.depth_mask_set(True)
+            gpu.state.blend_set('ALPHA')
+            batch.draw(shader)
 
 
 def register():
