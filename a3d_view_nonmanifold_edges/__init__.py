@@ -12,16 +12,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 bl_info = {
-    "name" : "A3D View Non-Manifold Edges",
-    "author" : "Ashlee3Dee", 
-    "description" : "Adds Viewport Overlay for Non-Manifold Edges",
-    "blender" : (3, 6, 1),
-    "version" : (0, 0, 1),
-    "location" : "3D View > Header > Overlays > Non-Manifold Edges",
-    "warning" : "",
-    "doc_url": "", 
-    "tracker_url": "https://github.com/ashlee3dee/a3d-b3d-tools", 
-    "category" : "3D View" 
+    "name": "A3D View Non-Manifold Edges",
+    "author": "Ashlee3Dee",
+    "description": "Adds Viewport Overlay for Non-Manifold Edges",
+    "blender": (3, 6, 1),
+    "version": (0, 0, 1),
+    "location": "3D View > Header > Overlays > Non-Manifold Edges",
+    "warning": "",
+    "doc_url": "",
+    "tracker_url": "https://github.com/ashlee3dee/a3d-b3d-tools",
+    "category": "3D View"
 }
 
 
@@ -29,7 +29,7 @@ import bpy
 import bpy.utils.previews
 import bmesh
 import gpu
-import gpu_extras
+from gpu_extras.batch import batch_for_shader
 
 
 addon_keymaps = {}
@@ -59,13 +59,16 @@ class SNA_OT_Toggledraw_A5Ef8(bpy.types.Operator):
 
     def execute(self, context):
         if bpy.context.scene.sna_show:
-            handler_7268F.append(bpy.types.SpaceView3D.draw_handler_add(sna_drawnonmanifoldedges_534D5, (), 'WINDOW', 'POST_VIEW'))
-            for a in bpy.context.screen.areas: a.tag_redraw()
+            handler_7268F.append(bpy.types.SpaceView3D.draw_handler_add(
+                sna_drawnonmanifoldedges_534D5, (), 'WINDOW', 'POST_VIEW'))
+            for a in bpy.context.screen.areas:
+                a.tag_redraw()
         else:
             if handler_7268F:
                 bpy.types.SpaceView3D.draw_handler_remove(handler_7268F[0], 'WINDOW')
                 handler_7268F.pop(0)
-                for a in bpy.context.screen.areas: a.tag_redraw()
+                for a in bpy.context.screen.areas:
+                    a.tag_redraw()
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -107,9 +110,9 @@ def sna_drawnonmanifoldedges_534D5():
                 indices = []
                 for i, line in enumerate(lines):
                     coords.extend(line)
-                    indices.append((i*2, i*2+1))
+                    indices.append((i * 2, i * 2 + 1))
                 shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
-                batch = gpu_extras.batch.batch_for_shader(shader, 'LINES', {"pos": coords}, indices=tuple(indices))
+                batch = batch_for_shader(shader, 'LINES', {"pos": coords}, indices=tuple(indices))
                 shader.bind()
                 shader.uniform_float("color", bpy.context.scene.sna_viewcolor)
                 gpu.state.line_width_set(bpy.context.scene.sna_viewwidth)
@@ -122,9 +125,12 @@ def sna_drawnonmanifoldedges_534D5():
 def register():
     global _icons
     _icons = bpy.utils.previews.new()
-    bpy.types.Scene.sna_viewcolor = bpy.props.FloatVectorProperty(name='ViewColor', description='', size=4, default=(0.0, 1.0, 0.0, 1.0), subtype='COLOR', unit='NONE', step=3, precision=6)
+    bpy.types.Scene.sna_viewcolor = bpy.props.FloatVectorProperty(
+        name='ViewColor', description='', size=4, default=(
+            0.0, 1.0, 0.0, 1.0), subtype='COLOR', unit='NONE', step=3, precision=6)
     bpy.types.Scene.sna_viewwidth = bpy.props.IntProperty(name='ViewWidth', description='', default=0, subtype='NONE')
-    bpy.types.Scene.sna_show = bpy.props.BoolProperty(name='Show', description='', default=False, update=sna_update_sna_show_1914A)
+    bpy.types.Scene.sna_show = bpy.props.BoolProperty(
+        name='Show', description='', default=False, update=sna_update_sna_show_1914A)
     bpy.utils.register_class(SNA_OT_Toggledraw_A5Ef8)
     bpy.types.VIEW3D_PT_overlay_geometry.append(sna_add_to_view3d_pt_overlay_geometry_E729E)
 
